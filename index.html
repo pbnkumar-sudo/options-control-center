@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Options Control Center</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#00d4ff">
+    <meta name="description" content="F&O Options trading dashboard with lot calculator, BTST window, and live charts">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="OCC">
+    <meta name="application-name" content="Options Control Center">
+    <meta name="msapplication-TileColor" content="#06090f">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="icons/icon-512.png">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+
+        <!-- Install Banner -->
+        <div id="install-banner">
+            <div class="install-text">
+                <strong>📱 Install as App</strong> — Add OCC to your home screen for the best experience (no browser bar, works offline)
+            </div>
+            <button class="install-btn" onclick="installApp()">Install App</button>
+            <button class="dismiss-btn" onclick="dismissInstall()">Later</button>
+        </div>
+
+        <!-- Header -->
+        <header>
+            <div class="header-brand">
+                <div class="brand-icon">📈</div>
+                <div>
+                    <h1><span>Options</span> Control Center</h1>
+                    <div class="live-dot">LIVE DASHBOARD</div>
+                </div>
+            </div>
+            <nav class="tab-bar">
+                <button onclick="switchTab('dashboard')" class="tab-btn active" id="btn-dashboard">�� Dashboard</button>
+                <button onclick="switchTab('tradingview')" class="tab-btn" id="btn-tradingview">📊 TradingView</button>
+                <button onclick="switchTab('sahi')" class="tab-btn" id="btn-sahi">🏦 Sahi Trading</button>
+            </nav>
+        </header>
+
+        <!-- ══ DASHBOARD TAB ══ -->
+        <div id="dashboard-tab" class="tab-content">
+
+            <!-- Inputs -->
+            <div class="section card">
+                <div class="card-title">Trade Inputs</div>
+                <div class="input-grid">
+                    <div>
+                        <label for="fo-symbols">F&amp;O Symbols (comma separated)</label>
+                        <textarea id="fo-symbols" rows="3" placeholder="RELIANCE,HDFCBANK,NIFTY...">RELIANCE,HDFCBANK,INFY,TCS,ICICIBANK,SBIN,KOTAKBANK,LT,NIFTY</textarea>
+                    </div>
+                    <div>
+                        <label for="pead-symbols">PEAD Candidates (from Screener.in)</label>
+                        <textarea id="pead-symbols" rows="3" placeholder="Enter symbols..."></textarea>
+                    </div>
+                    <div>
+                        <label for="available-capital">Available Capital (₹)</label>
+                        <input type="number" id="available-capital" value="100000" step="1000">
+                    </div>
+                    <div>
+                        <label for="risk-percent">Risk per Trade (%)</label>
+                        <input type="number" id="risk-percent" value="2" step="0.1">
+                    </div>
+                    <div>
+                        <label for="lot-size">Lot Size</label>
+                        <input type="number" id="lot-size" value="50" step="1">
+                    </div>
+                    <div>
+                        <label for="option-price">Option Price per Lot (₹)</label>
+                        <input type="number" id="option-price" value="100" step="1">
+                    </div>
+                </div>
+                <button onclick="recalculateLots()" class="primary-btn">⚡ Recalculate Lots</button>
+            </div>
+
+            <!-- Lot Calculation Panel -->
+            <div class="section card">
+                <div class="card-title">Lot Calculation</div>
+                <div class="calc-grid">
+                    <div class="calc-item">
+                        <div class="calc-label">Available Capital</div>
+                        <div class="calc-value">₹<span id="disp-capital">100000</span></div>
+                    </div>
+                    <div class="calc-item">
+                        <div class="calc-label">Risk Amount</div>
+                        <div class="calc-value">₹<span id="disp-risk-amt">2000</span></div>
+                    </div>
+                    <div class="calc-item">
+                        <div class="calc-label">Max Lots by Capital</div>
+                        <div class="calc-value"><span id="disp-max-cap">20</span> lots</div>
+                    </div>
+                    <div class="calc-item">
+                        <div class="calc-label">Max Lots by Risk (SL 30%)</div>
+                        <div class="calc-value"><span id="disp-max-risk">6</span> lots</div>
+                    </div>
+                    <div class="calc-item highlight">
+                        <div class="calc-label">✦ Final Lots to Buy</div>
+                        <div class="calc-value"><span id="disp-final-lots">6</span> lots</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BTST Window -->
+            <div class="section card">
+                <div class="card-title">BTST Window</div>
+                <div class="btst-panel">
+                    <div class="btst-time-block">
+                        <div class="btst-time" id="current-time">--:--</div>
+                        <div class="btst-label">Local Time</div>
+                    </div>
+                    <div class="btst-status-block off" id="btst-block">
+                        <div class="btst-status-text" id="btst-status-text">BTST WINDOW OFF</div>
+                        <div class="btst-hint">Active: 15:15 – 15:25 IST</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- F&O Table -->
+            <div class="section card">
+                <div class="card-title">F&amp;O Trend / BTST / Options Table</div>
+                <div class="table-wrap">
+                    <table id="fo-table">
+                        <thead>
+                            <tr>
+                                <th>Symbol</th>
+                                <th>Trend</th>
+                                <th>Signal (CE/PE/None)</th>
+                                <th>Suggested Strike</th>
+                                <th>Target</th>
+                                <th>SL</th>
+                                <th>Lots</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fo-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PEAD Table -->
+            <div class="section card">
+                <div class="card-title">PEAD Candidates Table</div>
+                <div class="table-wrap">
+                    <table id="pead-table">
+                        <thead>
+                            <tr>
+                                <th>Symbol</th>
+                                <th>Trend</th>
+                                <th>% From Low</th>
+                                <th>% From 52W High</th>
+                                <th>OK for Options</th>
+                                <th>Lots</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pead-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div><!-- end dashboard-tab -->
+
+        <!-- ══ TRADINGVIEW TAB ══ -->
+        <div id="tradingview-tab" class="tab-content" style="display:none">
+            <div class="section card">
+                <div class="card-title">TradingView Chart</div>
+                <div class="url-bar">
+                    <input type="text" id="tv-url" value="https://in.tradingview.com/chart/" placeholder="https://in.tradingview.com/chart/...">
+                    <button onclick="openTvChart()" class="primary-btn">Open Chart</button>
+                </div>
+                <p class="note">Log in to TradingView inside this frame. You can then trade via your connected broker (e.g., Dhan).</p>
+                <iframe id="tv-iframe" src="about:blank" allowfullscreen></iframe>
+            </div>
+        </div>
+
+        <!-- ══ SAHI TRADING TAB ══ -->
+        <div id="sahi-tab" class="tab-content" style="display:none">
+            <div class="section card">
+                <div class="card-title">Sahi Trading</div>
+                <div class="url-bar">
+                    <input type="text" id="sahi-url" value="https://sahi.example.com/login" placeholder="Your Sahi login URL">
+                    <button onclick="openSahi()" class="primary-btn">Open Sahi</button>
+                </div>
+                <p class="note">Log in to your Sahi trading account and place orders directly.</p>
+                <iframe id="sahi-iframe" src="about:blank" allowfullscreen></iframe>
+            </div>
+        </div>
+
+    </div><!-- end container -->
+
+    <script src="app.js"></script>
+</body>
+</html>
